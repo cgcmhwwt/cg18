@@ -150,7 +150,7 @@ def tree_split(data, parent_tree, vocabulary, key = None):
 #tree_split(json_data, root)        
             
 '''     *****     *****     *****     *****     '''
-
+# 试试出事情不出事情
 
 def visit_data(data, s):
     if type(data) == dict:
@@ -196,3 +196,10 @@ for file in filelist :
         root = Tree()
         root.nodetype = 'root'
         tree_split(json_data, root, voc)
+
+# 试试出事情不出事情
+
+a = 0
+a += 1
+print(a)
+a += 1
