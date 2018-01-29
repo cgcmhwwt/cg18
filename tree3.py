@@ -35,11 +35,9 @@ def combine_name_split(a):
        
         if temp_list[i] == cond:
             word.append(temp[i])
-
         if temp_list[i] in [4,5]:
             words.append(''.join(word))
             word = []
-
         if cond == 3 and temp_list[i] in [1,2]:
             words.append(''.join(word))
             word = []
@@ -85,7 +83,6 @@ for key in failure:
     f.write('\n')
 f.close()
 
-
 '''     tree building   '''
 class Tree(object):
     def __init__(self, nodetype = None, parent = None):
@@ -93,82 +90,65 @@ class Tree(object):
         self.child = []
         self.parent = parent
 
-        
-    def __iter__(self):
-        return iter(self.child)
-        
-    
-    def __type__(self):
-        return self.nodetype
-    
-
-    def relation_iter(self):
-        yield from self.child.items()
-        
-        
-    def child(self):
-        return self.child
-   
-
 def add_new_child(parent_tree):
     new_tree = Tree()
     new_tree.parent = parent_tree
     parent_tree.child.append(new_tree)
     return new_tree
 
-
-def tree_split(data, parent_tree, vocabulary, key = None):
-    new_tree = add_new_child(parent_tree)
-    #print(new_tree.parent.nodetype)
-    # 决定新树的nodetype
+def get_new_type(data):
     if type(data) == dict:
-        #print(data['type'])
         if type(data['type']) == dict:
-            new_tree.nodetype = data['type']['type']
+            temp = data['type']['type']
         if type(data['type']) == str:
-            new_tree.nodetype = data['type']
-        #print(data,'\n')
-        vocabulary[1].add(new_tree.nodetype)
+            temp = data['type']        
+        return temp
+    
+def tree_split(data, parent_tree, vocabulary, key = None):
+
+    if type(data) == dict:
+        if parent_tree.nodetype == 'root':
+            nodetype = get_new_type(data)
+            vocabulary[1].add(nodetype)
+            parent_tree.nodetype = nodetype
+            
         for key, data_key in data.items():            
             if key in ['comment','type']:
-                pass
+                continue
             else:
+                new_tree = add_new_child(parent_tree)
+                new_tree.nodetype = get_new_type(data_key)
+                vocabulary[1].add(new_tree.nodetype)            
                 tree_split(data_key, new_tree, vocabulary, key = key)
     
     if type(data) == list:
+        new_tree = add_new_child(parent_tree)
         new_tree.nodetype = key
         vocabulary[1].add(key)
         for dataitem in data:
             tree_split(dataitem, new_tree, vocabulary)
 
     if type(data) == str:
+        new_tree = add_new_child(parent_tree)
         new_tree.nodetype = 'string'
 
-        
-#root = Tree()
-#root.nodetype = 'root'
-#tree_split(json_data, root)        
+     
             
 '''     *****     *****     *****     *****     '''
-# 试试出事情不出事情
-
 def visit_data(data, s):
     if type(data) == dict:
         for key in data:
             if key in ['comment','type']:
                 continue
-
             if type(data[key]) == str:
-                #print(data[key])
                 if key == 'identifier':
-                    print(data[key], combine_name_split(data[key]),'\n')
                     s[0].append(combine_name_split(data[key]))
                 if key == 'isVarArgs':
                     s[1].append(data[key])    
                 if key == 'operator':
                     s[2].append(combine_name_split(data[key]))
-                    
             visit_data(data[key], s)
+            
     if type(data) == str:
         pass
                 
@@ -184,7 +164,6 @@ for file in filelist :
         json_data = json.load(open(file,'r'))
         visit_data(json_data, s)
 
-
 voc1 = set()
 voc2 = set()
 voc2.add('root')
@@ -196,10 +175,3 @@ for file in filelist :
         root = Tree()
         root.nodetype = 'root'
         tree_split(json_data, root, voc)
-
-# 试试出事情不出事情
-
-a = 0
-a += 1
-print(a)
-a += 1
