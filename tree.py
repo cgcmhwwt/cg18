@@ -79,10 +79,11 @@ if __name__ == '__main__':
 
     print('parse failures:', len(failure))
 
-    with open('namelist.txt', 'w') as f:
-        for key in failure:
-            f.write(key)
-            f.write('\n')
+    if len(failure) != 0:
+        with open('namelist.txt', 'w') as f:
+            for key in failure:
+                f.write(key)
+                f.write('\n')
 
 '''     tree building   '''
 class Tree(object):
@@ -141,6 +142,14 @@ def tree_split(data, parent_tree, vocabulary, key = None):
 
     if type(data) == str:
         new_tree.nodetype = 'string'
+        if key in ['identifier', 'operator']:
+            words = combine_name_split(data)
+            for word in words:
+                tree_split(word, new_tree, vocabulary)
+        elif key == 'isVarArgs':
+            pass
+        else:
+            vocabulary[0].add(data)
 
 def visit_data(data, s):
     if type(data) == dict:
@@ -175,15 +184,15 @@ if __name__ == '__main__':
             json_data = json.load(f)
         visit_data(json_data, s)
 
-
-    voc1 = set()
-    voc2 = set()
-    voc2.add('root')
-    voc = [voc1, voc2]
-    for file in success:
-        #print('***** %s *****'%file)
+    for file in sorted(success):
+        print('***** %s *****' % file)
         with open(os.path.join(path, file)) as f:
             json_data = json.load(f)
+        voc1 = set()
+        voc2 = set()
+        voc2.add('root')
+        voc = [voc1, voc2]
         root = Tree()
         root.nodetype = 'root'
         tree_split(json_data, root, voc)
+        print(voc)
