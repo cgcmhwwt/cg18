@@ -1,6 +1,7 @@
 import json
 import os
 
+path = "../mkdata/cocos2d-master-result"
 
 def combine_name_split(a):
     temp = list(a)
@@ -60,9 +61,6 @@ def combine_name_split(a):
     words = [word.lower() for word in words]
     return words
 
-path = "F:/cocos2d-master-result-1"
-os.chdir(path)
-
 '''     parse detect    '''
 success = []
 failure = []
@@ -70,21 +68,20 @@ failure = []
 filelist = os.listdir(path)
 for file in filelist:
     if file.endswith('.json'):
-        try:
-            temp = json.load(open(file,'r'))
-            success.append(file)
-        except json.decoder.JSONDecodeError:
-            failure.append(file)
+        with open(os.path.join(path, file)) as f:
+            try:
+                temp = json.load(f)
+                success.append(file)
+            except json.decoder.JSONDecodeError:
+                failure.append(file)
 del temp
 
-print('parse: ' ,len(failure)==0,'\n')
-        
-f = open('namelist.txt','w')
-for key in failure:
-    f.write(key)
-    f.write('\n')
-f.close()
+print('parse failures:', len(failure))
 
+with open('namelist.txt', 'w') as f:
+    for key in failure:
+        f.write(key)
+        f.write('\n')
 
 '''     tree building   '''
 class Tree(object):
@@ -108,7 +105,7 @@ class Tree(object):
         
     def child(self):
         return self.child
-   
+
 
 def add_new_child(parent_tree):
     new_tree = Tree()
@@ -150,7 +147,6 @@ def tree_split(data, parent_tree, vocabulary, key = None):
 #tree_split(json_data, root)        
             
 '''     *****     *****     *****     *****     '''
-# 试试出事情不出事情
 
 def visit_data(data, s):
     if type(data) == dict:
@@ -181,7 +177,8 @@ s = [[],[],[]]
 for file in filelist :
     if file in success:
         #print('***** %s *****'%file)
-        json_data = json.load(open(file,'r'))
+        with open(os.path.join(path, file)) as f:
+            json_data = json.load(f)
         visit_data(json_data, s)
 
 
@@ -189,17 +186,10 @@ voc1 = set()
 voc2 = set()
 voc2.add('root')
 voc = [voc1, voc2]
-for file in filelist :
-    if file in success:
-        #print('***** %s *****'%file)
-        json_data = json.load(open(file,'r'))
-        root = Tree()
-        root.nodetype = 'root'
-        tree_split(json_data, root, voc)
-
-# 试试出事情不出事情
-
-a = 0
-a += 1
-print(a)
-a += 1
+for file in success:
+    #print('***** %s *****'%file)
+    with open(os.path.join(path, file)) as f:
+        json_data = json.load(f)
+    root = Tree()
+    root.nodetype = 'root'
+    tree_split(json_data, root, voc)
